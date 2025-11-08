@@ -116,3 +116,26 @@ docs/.doctrees/
 *.feather
 *.arrow
 !notebooks/*.csv
+
+# GitHub
+.github/workflows/*.log
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Pre-commit
+.pre-commit-cache/
+
+# Documentation builds
+docs/_build/
+docs/api/
+
+# QA reports
+bandit-report.json
+coverage.xml
+
+# Sphinx
+docs/_static/
+docs/_templates/
