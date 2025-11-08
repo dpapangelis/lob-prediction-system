@@ -1,0 +1,57 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: lob-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lob_prediction
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./scripts/setup_database.sql:/docker-entrypoint-initdb.d/setup.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: lob-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Streamlit dashboard (optional - can also run natively during dev)
+  # dashboard:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.dashboard
+  #   container_name: lob-dashboard
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8501:8501"
+  #   depends_on:
+  #     - timescaledb
+  #   environment:
+  #     - DB_HOST=timescaledb
+  #   volumes:
+  #     - ./src:/app/src
+
+volumes:
+  timescale_data:
+  redis_data:
+
+networks:
+  default:
+    name: lob-network

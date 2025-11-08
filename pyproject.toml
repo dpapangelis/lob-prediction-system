@@ -1,0 +1,106 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Lobium"
+version = "0.0.1"
+description = "TCN-based LOB price prediction with SHAP explainability"
+authors = [
+    {name = "Dimitrios Papangelis", email = "dpapangelis@york.citycollege.eu"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = { text = "All Rights Reserved © 2025 D. Papangelis. For academic examination use only." }
+
+dependencies = [
+    # Core Python
+    "python-dotenv>=1.0.0",
+    
+    # Data handling
+    "pandas>=2.1.0",
+    "numpy>=1.26.0",
+    "pyarrow>=14.0.0",
+    
+    # Database
+    "psycopg2-binary>=2.9.9",
+    "sqlalchemy>=2.0.0",
+    "asyncpg>=0.29.0",
+    
+    # WebSocket & HTTP (we'll build our own Binance client)
+    "websockets>=12.0",
+    "aiohttp>=3.9.0",
+    "requests>=2.31.0",
+    
+    # Machine Learning - PyTorch
+    "torch>=2.1.0",
+    "torchvision>=0.16.0",
+    
+    # ML utilities
+    "scikit-learn>=1.3.0",
+    "scipy>=1.11.0",
+    
+    # Explainability
+    "shap>=0.43.0",
+    
+    # Experiment tracking
+    "wandb>=0.16.0",
+    
+    # API & Dashboard
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "streamlit>=1.28.0",
+    
+    # Visualization
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "plotly>=5.18.0",
+    
+    # Utilities
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "redis>=5.0.0",
+    "python-json-logger>=2.0.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    
+    # Code quality
+    "black>=23.11.0",
+    "isort>=5.12.0",
+    "flake8>=6.1.0",
+    "mypy>=1.7.0",
+    
+    # Notebook
+    "jupyter>=1.0.0",
+    "jupyterlab>=4.0.0",
+    "ipywidgets>=8.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/dpapangelis/lob-prediction-system"
+Repository = "https://github.com/dpapangelis/lob-prediction-system"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=src --cov-report=html --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
