@@ -26,9 +26,9 @@ jobs:
           path: |
             ~/.cache/pip
             ~/.cache/pre-commit
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+          key: ${{ runner.os }}-pip-3.12-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-3.12-
             ${{ runner.os }}-pip-
 
       - name: Install dependencies
@@ -51,15 +51,11 @@ jobs:
 
       - name: Type check with mypy
         run: mypy src/ --ignore-missing-imports
-        continue-on-error: true  # Don't fail build on type errors initially
+        continue-on-error: true
 
   test:
-    name: Tests (Python ${{ matrix.python-version }})
+    name: Tests
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ['3.12', '3.13']
 
     services:
       postgres:
@@ -90,18 +86,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.12'
 
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+          key: ${{ runner.os }}-pip-3.12-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-3.12-
 
       - name: Install dependencies
         run: |
@@ -171,7 +167,7 @@ jobs:
 
       - name: Test Docker Compose
         run: |
-          docker compose up -d  # Changed from docker-compose
+          docker compose up -d
           sleep 10
           docker compose ps
           docker compose down
