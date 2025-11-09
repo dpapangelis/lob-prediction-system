@@ -615,7 +615,3 @@ METRICS_LOG_INTERVAL = 100  # snapshots
 ---
 
 **End of Document**
-
-*Last Updated: 2025-11-09*
-*Author: Dimitris Papangelis*
-*Dissertation: LOBIUM Price Prediction with TCN*
