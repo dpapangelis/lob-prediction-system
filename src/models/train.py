@@ -25,6 +25,7 @@ from tqdm import tqdm
 from config.logging_config import get_logger, setup_logging
 from config.settings import settings
 from src.models.dataset import LOBDataset, create_train_val_test_split, load_data_from_db
+from src.models.losses import get_loss_function
 from src.models.tcn import LOBPricePredictionTCN
 
 logger = get_logger(__name__)
@@ -417,7 +418,14 @@ async def main(args):
     model = model.to(device)
 
     # Loss and optimizer
-    criterion = nn.MSELoss()
+    criterion = get_loss_function(
+        args.loss_function,
+        alpha=args.loss_alpha if hasattr(args, "loss_alpha") else None,
+        beta=args.loss_beta if hasattr(args, "loss_beta") else None,
+        delta=args.loss_delta if hasattr(args, "loss_delta") else None,
+    )
+    logger.info(f"Using loss function: {args.loss_function}")
+
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=args.learning_rate,
@@ -521,6 +529,24 @@ if __name__ == "__main__":
     parser.add_argument("--learning-rate", type=float, default=0.001, help="Learning rate")
     parser.add_argument("--weight-decay", type=float, default=1e-5, help="Weight decay (L2 reg)")
     parser.add_argument("--patience", type=int, default=10, help="Early stopping patience")
+
+    # Loss function args
+    parser.add_argument(
+        "--loss-function",
+        type=str,
+        default="mse",
+        choices=["mse", "mae", "huber", "directional", "asymmetric", "sharpe"],
+        help="Loss function to use",
+    )
+    parser.add_argument(
+        "--loss-alpha", type=float, default=0.5, help="Alpha parameter for directional loss"
+    )
+    parser.add_argument(
+        "--loss-beta", type=float, default=2.0, help="Beta parameter for asymmetric loss"
+    )
+    parser.add_argument(
+        "--loss-delta", type=float, default=1.0, help="Delta parameter for Huber loss"
+    )
 
     # Checkpoint args
     parser.add_argument("--save-every", type=int, default=10, help="Save checkpoint every N epochs")
