@@ -1,10 +1,8 @@
 name: CI Pipeline
 
 on:
-  push:
-    branches: [develop, main, feature/*]
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main]  # Only on PRs to these branches
 
 jobs:
   lint-and-format:
@@ -15,13 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Free Disk Space  # ADD THIS
+      - name: Free Disk Space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          sudo apt-get clean
           df -h
 
       - name: Set up Python
@@ -43,21 +40,18 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[ci]" --no-cache-dir  # ADD --no-cache-dir
+          pip install -e ".[ci]" --no-cache-dir
 
       - name: Check code formatting with Black
         run: black --check src/ tests/ config/
-        continue-on-error: true  # Don't fail on formatting
 
       - name: Check import sorting with isort
         run: isort --check-only src/ tests/ config/
-        continue-on-error: true
 
       - name: Lint with flake8
         run: |
           flake8 src/ tests/ config/ --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 src/ tests/ config/ --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
-        continue-on-error: true
 
       - name: Type check with mypy
         run: mypy src/ --ignore-missing-imports
@@ -96,13 +90,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Free Disk Space  # ADD THIS
+      - name: Free Disk Space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          sudo apt-get clean
           df -h
 
       - name: Set up Python
@@ -121,7 +114,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[ci]" --no-cache-dir  # ADD --no-cache-dir
+          pip install -e ".[ci]" --no-cache-dir
 
       - name: Run tests with coverage
         env:
@@ -134,7 +127,6 @@ jobs:
           REDIS_PORT: 6379
         run: |
           pytest tests/ -v --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing
-        continue-on-error: true  # Don't fail PR on test failures during development
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -152,11 +144,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Free Disk Space  # ADD THIS
+      - name: Free Disk Space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
-          sudo apt-get clean
           df -h
 
       - name: Set up Python
@@ -192,10 +183,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Free Disk Space  # ADD THIS
+      - name: Free Disk Space
         run: |
           sudo rm -rf /usr/share/dotnet
-          sudo apt-get clean
           df -h
 
       - name: Test Docker Compose
@@ -204,4 +194,3 @@ jobs:
           sleep 10
           docker compose ps
           docker compose down
-        continue-on-error: true  # Don't fail on docker issues
