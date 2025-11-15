@@ -281,6 +281,60 @@ async def get_prediction_history(
         ]
 
 
+@app.get("/api/lob/latest")
+async def get_latest_lob(symbol: str = "BTCUSDT"):
+    """Get latest LOB snapshot with all 5 levels."""
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT
+                time,
+                mid_price,
+                spread,
+                spread_bps,
+                bid_price_1, bid_volume_1,
+                bid_price_2, bid_volume_2,
+                bid_price_3, bid_volume_3,
+                bid_price_4, bid_volume_4,
+                bid_price_5, bid_volume_5,
+                ask_price_1, ask_volume_1,
+                ask_price_2, ask_volume_2,
+                ask_price_3, ask_volume_3,
+                ask_price_4, ask_volume_4,
+                ask_price_5, ask_volume_5,
+                total_bid_volume,
+                total_ask_volume,
+                volume_imbalance
+            FROM lob_data
+            WHERE symbol = $1
+            ORDER BY time DESC
+            LIMIT 1
+            """,
+            symbol,
+        )
+
+        if not row:
+            raise HTTPException(status_code=404, detail="No LOB data found")
+
+        return {
+            "time": row["time"].isoformat(),
+            "mid_price": float(row["mid_price"]),
+            "spread": float(row["spread"]),
+            "spread_bps": float(row["spread_bps"]),
+            "bids": [
+                {"price": float(row[f"bid_price_{i}"]), "volume": float(row[f"bid_volume_{i}"])}
+                for i in range(1, 6)
+            ],
+            "asks": [
+                {"price": float(row[f"ask_price_{i}"]), "volume": float(row[f"ask_volume_{i}"])}
+                for i in range(1, 6)
+            ],
+            "total_bid_volume": float(row["total_bid_volume"]),
+            "total_ask_volume": float(row["total_ask_volume"]),
+            "volume_imbalance": float(row["volume_imbalance"]),
+        }
+
+
 # =============================================================================
 # API Endpoints - Accuracy Metrics
 # =============================================================================
@@ -787,7 +841,7 @@ async def websocket_metrics(websocket: WebSocket):
                         ) * 100 as directional_accuracy
                     FROM prediction_outcomes
                     WHERE symbol = 'BTCUSDT'
-                      AND prediction_time >= $1
+                    AND prediction_time >= $1
                     GROUP BY horizon
                     """,
                     cutoff_time,

@@ -75,6 +75,18 @@ export interface CollectionStatus {
   seconds_since_update: number | null;
 }
 
+export interface LOBSnapshot {
+  time: string;
+  mid_price: number;
+  spread: number;
+  spread_bps: number;
+  bids: Array<{ price: number; volume: number }>;
+  asks: Array<{ price: number; volume: number }>;
+  total_bid_volume: number;
+  total_ask_volume: number;
+  volume_imbalance: number;
+}
+
 // API Functions
 export const apiClient = {
   // Predictions
@@ -83,6 +95,10 @@ export const apiClient = {
 
   getPredictionHistory: (hours: number = 24, limit: number = 1000) =>
     api.get<Prediction[]>(`/api/predictions/history?hours=${hours}&limit=${limit}`),
+
+    // LOB
+  getLatestLOB: () =>
+    api.get<LOBSnapshot>('/api/lob/latest'),
 
   // Metrics
   getAccuracyMetrics: (timeWindow: '1m' | '5m' | '1h' | '24h' | 'all' = '1h') =>

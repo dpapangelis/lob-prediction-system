@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Activity, BarChart3, Brain, Database, TrendingUp } from 'lucide-react';
 import LiveDashboard from './components/LiveDashboard';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
+// import AnalyticsDashboard from './components/AnalyticsDashboard';
+import AdvancedAnalyticsDashboard from './components/AdvancedAnalyticsDashboard';
 import DataDashboard from './components/DataDashboard';
+import Footer from './components/Footer';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,7 +31,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-slate-900">
+      <div className="min-h-screen bg-slate-900 flex flex-col">
         {/* Header */}
         <header className="bg-slate-800 border-b border-slate-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +43,7 @@ function App() {
                     LOB Prediction System
                   </h1>
                   <p className="text-sm text-slate-400">
-                    Real-time cryptocurrency price prediction
+                    Real-time cryptocurrency price prediction using TCN
                   </p>
                 </div>
               </div>
@@ -85,9 +87,9 @@ function App() {
         </nav>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
           {activeTab === 'live' && <LiveDashboard />}
-          {activeTab === 'analytics' && <AnalyticsDashboard />}
+          {activeTab === 'analytics' && <AdvancedAnalyticsDashboard />}
           {activeTab === 'data' && <DataDashboard />}
           {activeTab === 'training' && (
             <div className="text-center py-12">
@@ -95,6 +97,9 @@ function App() {
               <h2 className="text-xl font-semibold text-slate-400">
                 Training Dashboard Coming Soon
               </h2>
+              <p className="text-sm text-slate-500 mt-2">
+                Monitor training progress, hyperparameters, and model performance in real-time
+              </p>
             </div>
           )}
           {activeTab === 'models' && (
@@ -103,9 +108,15 @@ function App() {
               <h2 className="text-xl font-semibold text-slate-400">
                 Model Registry Coming Soon
               </h2>
+              <p className="text-sm text-slate-500 mt-2">
+                View all trained models, compare performance, and manage deployments
+              </p>
             </div>
           )}
         </main>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </QueryClientProvider>
   );
