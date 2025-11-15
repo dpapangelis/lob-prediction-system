@@ -79,7 +79,7 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     """Close database connection pool."""
-    global db_pool
+    # global db_pool
     if db_pool:
         await db_pool.close()
         logger.info("Database connection pool closed")
