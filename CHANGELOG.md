@@ -35,7 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - N/A
 
 ### Fixed
-- N/A
+- Critical: Swapped `absolute_error` and `squared_error` columns in evaluation service INSERT statement
+- Live system now loads normalization parameters from model checkpoint instead of hardcoded zeros/ones
+- Training pipeline now saves normalization mean/std in model checkpoints
+- `load_data_from_db()` now queries and reconstructs all 43 features (was only 6)
+- `flush_batch()` in database writer now performs actual transactional batch writes
+- Clarified feature engineering normalization as intentional pass-through (handled by LOBDataset)
+- Uncommented test dataset creation in training pipeline
 
 ### Security
 - Environment variables properly handled via `.env` file

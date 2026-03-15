@@ -225,17 +225,19 @@ async def load_data_from_db(
     conn = await asyncpg.connect(**db_config)
 
     try:
-        # Query data (order by time ascending)
+        # Query all columns used to reconstruct the 43 features
         query = """
         SELECT
             time,
-            mid_price,
-            spread,
-            imbalance,
+            mid_price, spread, spread_bps,
+            weighted_mid_price,
             bid_price_1, bid_volume_1, ask_price_1, ask_volume_1,
             bid_price_2, bid_volume_2, ask_price_2, ask_volume_2,
-            bid_price_3, bid_volume_3, ask_price_3, ask_volume_3
-            -- Note: Add all 43 features in production
+            bid_price_3, bid_volume_3, ask_price_3, ask_volume_3,
+            bid_price_4, bid_volume_4, ask_price_4, ask_volume_4,
+            bid_price_5, bid_volume_5, ask_price_5, ask_volume_5,
+            total_bid_volume, total_ask_volume, volume_imbalance,
+            price_range, depth_imbalance
         FROM lob_data
         WHERE symbol = $1
           AND time >= $2
@@ -251,23 +253,52 @@ async def load_data_from_db(
         logger.info(f"Loaded {len(rows)} snapshots from database")
 
         # Convert to numpy arrays
-        # _timestamps = np.array([row["time"] for row in rows])
         mid_prices = np.array([float(row["mid_price"]) for row in rows])
 
-        # Extract features (simplified - add all 43 in production)
+        # Build the full 43-feature vector matching LOBFeatureEngineering order:
+        #   [mid_price, spread, spread_bps, spread_log,
+        #    weighted_mid_price,
+        #    (bid_price_i, ask_price_i, bid_volume_i, ask_volume_i,
+        #     price_diff_i, volume_imbalance_i) for i in 1..5,
+        #    total_bid_volume, total_ask_volume, total_volume_imbalance,
+        #    bid_ask_volume_ratio,
+        #    depth_imbalance, price_range,
+        #    accumulated_depth_bid, accumulated_depth_ask]
+        def _row_to_features(row):
+            mid = float(row["mid_price"])
+            spread = float(row["spread"])
+            spread_bps = float(row["spread_bps"])
+            spread_log = float(np.log(1 + spread))
+            weighted_mid = float(row["weighted_mid_price"])
+
+            feats = [mid, spread, spread_bps, spread_log, weighted_mid]
+
+            for lvl in range(1, 6):
+                bp = float(row[f"bid_price_{lvl}"])
+                ap = float(row[f"ask_price_{lvl}"])
+                bv = float(row[f"bid_volume_{lvl}"])
+                av = float(row[f"ask_volume_{lvl}"])
+                price_diff = ap - bp
+                total_vol = bv + av
+                vol_imbalance = (bv - av) / total_vol if total_vol > 0 else 0.0
+                feats.extend([bp, ap, bv, av, price_diff, vol_imbalance])
+
+            tbv = float(row["total_bid_volume"])
+            tav = float(row["total_ask_volume"])
+            total_vol = tbv + tav
+            total_imbalance = float(row["volume_imbalance"])
+            vol_ratio = tbv / tav if tav > 0 else 0.0
+            feats.extend([tbv, tav, total_imbalance, vol_ratio])
+
+            depth_imb = float(row["depth_imbalance"])
+            price_range = float(row["price_range"])
+            # accumulated depth = total volume per side (already queried)
+            feats.extend([depth_imb, price_range, tbv, tav])
+
+            return feats
+
         features = np.array(
-            [
-                [
-                    float(row["spread"]),
-                    float(row["imbalance"]),
-                    float(row["bid_price_1"]),
-                    float(row["bid_volume_1"]),
-                    float(row["ask_price_1"]),
-                    float(row["ask_volume_1"]),
-                    # ... add remaining features
-                ]
-                for row in rows
-            ],
+            [_row_to_features(row) for row in rows],
             dtype=np.float32,
         )
 

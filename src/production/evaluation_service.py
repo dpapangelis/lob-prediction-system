@@ -179,8 +179,8 @@ class EvaluationService:
                             predicted_return,  # $5 predicted_return
                             actual_return,  # $6 actual_return
                             error,  # $7 error
-                            absolute_error,  # $8 absolute_error  <- SWAPPED
-                            squared_error,  # $9 squared_error   <- SWAPPED
+                            squared_error,  # $8 squared_error
+                            absolute_error,  # $9 absolute_error
                             direction_correct,  # $10 direction_correct
                             outcome_time,  # $11 outcome_time
                         )
