@@ -77,6 +77,8 @@ class Trainer:
         checkpoint_dir: Path,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         early_stopping_patience: int = 10,
+        normalization_mean: Optional[np.ndarray] = None,
+        normalization_std: Optional[np.ndarray] = None,
     ):
         """Initialize trainer."""
         self.model = model
@@ -87,6 +89,8 @@ class Trainer:
         self.device = device
         self.checkpoint_dir = checkpoint_dir
         self.early_stopping_patience = early_stopping_patience
+        self.normalization_mean = normalization_mean
+        self.normalization_std = normalization_std
 
         # Training state
         self.current_epoch = 0
@@ -190,6 +194,11 @@ class Trainer:
             "best_val_loss": self.best_val_loss,
             "history": self.history,
         }
+
+        if self.normalization_mean is not None:
+            checkpoint["normalization_mean"] = self.normalization_mean
+        if self.normalization_std is not None:
+            checkpoint["normalization_std"] = self.normalization_std
 
         filepath = self.checkpoint_dir / filename
         torch.save(checkpoint, filepath)
@@ -382,14 +391,14 @@ async def main(args):
         std=std,
     )
 
-    # _test_dataset = LOBDataset(
-    #     X_test,
-    #     y_test,
-    #     sequence_length=args.sequence_length,
-    #     normalize=True,
-    #     mean=mean,
-    #     std=std,
-    # )
+    test_dataset = LOBDataset(  # noqa: F841 — used by evaluate.py separately
+        X_test,
+        y_test,
+        sequence_length=args.sequence_length,
+        normalize=True,
+        mean=mean,
+        std=std,
+    )
 
     # Create data loaders
     train_loader = DataLoader(
@@ -453,6 +462,8 @@ async def main(args):
         device=device,
         checkpoint_dir=checkpoint_dir,
         early_stopping_patience=args.patience,
+        normalization_mean=mean,
+        normalization_std=std,
     )
 
     # Load checkpoint if resuming

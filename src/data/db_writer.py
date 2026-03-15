@@ -241,12 +241,62 @@ class TimescaleDBWriter:
         if not self.batch_buffer:
             return
 
+        if not self.pool:
+            logger.error("Cannot flush batch: database not connected")
+            return
+
+        batch = list(self.batch_buffer)
+        self.batch_buffer.clear()
+
         try:
-            logger.debug(f"Flushing batch of {len(self.batch_buffer)} records")
-            # TODO: Implement batch write logic
-            self.batch_buffer.clear()
+            logger.debug(f"Flushing batch of {len(batch)} records")
+
+            async with self.pool.acquire() as conn:
+                async with conn.transaction():
+                    for record in batch:
+                        await conn.execute(
+                            """
+                            INSERT INTO lob_data (
+                                time, symbol,
+                                bid_price_1, bid_volume_1,
+                                bid_price_2, bid_volume_2,
+                                bid_price_3, bid_volume_3,
+                                ask_price_1, ask_volume_1,
+                                ask_price_2, ask_volume_2,
+                                ask_price_3, ask_volume_3,
+                                mid_price, spread, imbalance
+                            ) VALUES (
+                                $1, $2,
+                                $3, $4, $5, $6, $7, $8,
+                                $9, $10, $11, $12, $13, $14,
+                                $15, $16, $17
+                            )
+                            ON CONFLICT (time, symbol) DO NOTHING
+                            """,
+                            record["timestamp"],
+                            record["symbol"],
+                            record.get("bid_price_1"),
+                            record.get("bid_volume_1"),
+                            record.get("bid_price_2"),
+                            record.get("bid_volume_2"),
+                            record.get("bid_price_3"),
+                            record.get("bid_volume_3"),
+                            record.get("ask_price_1"),
+                            record.get("ask_volume_1"),
+                            record.get("ask_price_2"),
+                            record.get("ask_volume_2"),
+                            record.get("ask_price_3"),
+                            record.get("ask_volume_3"),
+                            record.get("mid_price"),
+                            record.get("spread"),
+                            record.get("imbalance"),
+                        )
+
+            self.writes_completed += len(batch)
+            logger.debug(f"Successfully flushed {len(batch)} records")
 
         except Exception as e:
+            self.writes_failed += len(batch)
             logger.error(f"Failed to flush batch: {e}")
 
 

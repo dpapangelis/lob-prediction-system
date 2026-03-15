@@ -378,23 +378,20 @@ class LOBFeatureEngineering:
         """
         Normalize feature array to stable ranges.
 
-        Uses min-max scaling for bounded features and standardization
-        for unbounded features. Normalization parameters could be learned
-        from training data for production use.
+        At ingestion time, normalization is deliberately a no-op: raw
+        feature values are stored and normalization is applied later
+        during training (see LOBDataset) using statistics fitted on the
+        training set.  This avoids data leakage and keeps stored data in
+        its original scale for analysis.
 
         Args:
             features (np.ndarray): Raw feature array of shape (1, n_features).
 
         Returns:
-            np.ndarray: Normalized feature array of same shape.
-
-        Note:
-            This is a simple normalization. For production, use sklearn's
-            StandardScaler or MinMaxScaler fit on training data.
+            np.ndarray: Feature array (unchanged at ingestion time).
         """
-        # TODO: Implement proper normalization with fitted scaler
-        # For now, return as-is with warning
-        logger.debug("Feature normalization not yet implemented")
+        # Normalization is handled by LOBDataset during training using
+        # per-feature mean/std fitted on the training split.
         return features
 
     def compute_features_batch(self, lob_data_list: list[dict]) -> np.ndarray:

@@ -97,10 +97,18 @@ class UnifiedProductionSystem:
 
         logger.info(f"Model loaded (epoch {checkpoint['epoch']})")
 
-        # Normalization (TODO: save these in checkpoint)
-        logger.warning("No normalization params in checkpoint, using zeros/ones")
-        self.mean = np.zeros(43)
-        self.std = np.ones(43)
+        # Load normalization parameters from checkpoint
+        if "normalization_mean" in checkpoint and "normalization_std" in checkpoint:
+            self.mean = checkpoint["normalization_mean"]
+            self.std = checkpoint["normalization_std"]
+            logger.info("Loaded normalization parameters from checkpoint")
+        else:
+            logger.warning(
+                "No normalization params in checkpoint — falling back to identity. "
+                "Re-train and save normalization params for correct inference."
+            )
+            self.mean = np.zeros(43)
+            self.std = np.ones(43)
 
         # Feature engineering
         self.feature_engineer = LOBFeatureEngineering(levels=5, normalize=False)
