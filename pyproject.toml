@@ -85,7 +85,7 @@ dev = [
     "pre-commit>=3.5.0",
 
     # Notebook
-    "jupyter>=1.0.0",
+    "jupyter>=1.1.1",
     "jupyterlab>=4.0.0",
     "ipywidgets>=8.1.0",
 ]
